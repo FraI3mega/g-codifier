@@ -40,6 +40,33 @@ fn encode_line(line: &str, data: &Encoded) -> Result<String> {
         x, data.0, y, data.1, e, data.2
     ))
 }
+#[allow(clippy::cast_possible_truncation)]
+fn decode_line(line: &str) -> Result<u8> {
+    let caps = regex!(r"^G1 X(\d*\.\d*) Y(\d*\.\d*) E(\d*\.\d*)$")
+        .captures(line)
+        .ok_or_eyre(eyre!("Group did not match in line"))?;
+    let x = caps[1]
+        .chars()
+        .last()
+        .ok_or_eyre(eyre!("Could not get last character of X"))?
+        .to_digit(8)
+        .ok_or_eyre(eyre!("Could not convert char to uint"))? as u8;
+    let y = caps[2]
+        .chars()
+        .last()
+        .ok_or_eyre(eyre!("Could not get last character of Y"))?
+        .to_digit(8)
+        .ok_or_eyre(eyre!("Could not convert char to uint"))? as u8;
+    let e = caps[3]
+        .chars()
+        .last()
+        .ok_or_eyre(eyre!("Could not get last character of E"))?
+        .to_digit(8)
+        .ok_or_eyre(eyre!("Could not convert char to uint"))? as u8;
+    let enc = Encoded(x, y, e);
+    Ok(enc.decode_byte()?)
+}
+
 fn main() -> Result<()> {
     color_eyre::install()?;
     println!("Hello, world!");
@@ -70,4 +97,11 @@ fn test_encode_line() {
     let data_to_encode = Encoded::encode_byte(0xAF).unwrap();
     let line_encoded = encode_line(initial_line, &data_to_encode).unwrap();
     assert_eq!(expected, line_encoded);
+}
+#[test]
+fn test_decode_line() {
+    let line_encoded = "G1 X113.6365 Y136.3643 E.809526".to_string();
+    let expected_data = 0xAF;
+    let decoded_data = decode_line(&line_encoded).unwrap();
+    assert_eq!(expected_data, decoded_data);
 }
