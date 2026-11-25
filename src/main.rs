@@ -2,10 +2,13 @@
 
 use color_eyre::eyre::{Ok, OptionExt, Result, eyre};
 use regex::Regex;
+use regex::regex;
 use std::fs;
 
+#[derive(Debug)]
 struct Encoded(u8, u8, u8);
 impl Encoded {
+    /// Encode a byte into a triplet
     fn encode_byte(byte: u8) -> Result<Self> {
         let parity: u8 = (byte.count_ones() % 2).try_into()?;
         let d1 = byte.extract_bits(0b1110_0000);
@@ -23,6 +26,19 @@ impl Encoded {
             Err(eyre!("Parity invalid"))
         }
     }
+}
+fn encode_line(line: &str, data: &Encoded) -> Result<String> {
+    //G1 X113.636 Y136.364 E.80952
+    let caps = regex!(r"^G1 X(\d*\.\d*) Y(\d*\.\d*) E(\d*\.\d*)$")
+        .captures(line)
+        .ok_or_eyre(eyre!("Group did not match in line"))?;
+    let x = &caps[1];
+    let y = &caps[2];
+    let e = &caps[3];
+    Ok(format!(
+        "G1 X{}{} Y{}{} E{}{}",
+        x, data.0, y, data.1, e, data.2
+    ))
 }
 fn main() -> Result<()> {
     color_eyre::install()?;
@@ -45,4 +61,13 @@ fn test_encode_decode() {
     let encoded = Encoded::encode_byte(byte).unwrap();
     let decoded = encoded.decode_byte().unwrap();
     assert_eq!(byte, decoded);
+}
+
+#[test]
+fn test_encode_line() {
+    let initial_line = "G1 X113.636 Y136.364 E.80952";
+    let expected = "G1 X113.6365 Y136.3643 E.809526".to_string();
+    let data_to_encode = Encoded::encode_byte(0xAF).unwrap();
+    let line_encoded = encode_line(initial_line, &data_to_encode).unwrap();
+    assert_eq!(expected, line_encoded);
 }
