@@ -4,6 +4,9 @@ use color_eyre::eyre::{Ok, OptionExt, Result, eyre};
 use regex::Regex;
 use regex::regex;
 use std::fs;
+use std::sync::LazyLock;
+
+static REGEX_PATTERN: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^G1 X(\d*\.\d*) Y(\d*\.\d*) E(\d*\.\d*)$").unwrap());
 
 #[derive(Debug)]
 struct Encoded(u8, u8, u8);
@@ -29,8 +32,8 @@ impl Encoded {
 }
 fn encode_line(line: &str, data: &Encoded) -> Result<String> {
     //G1 X113.636 Y136.364 E.80952
-    let caps = regex!(r"^G1 X(\d*\.\d*) Y(\d*\.\d*) E(\d*\.\d*)$")
-        .captures(line)
+    let caps = &REGEX_PATTERN
+        .captures(line.trim())
         .ok_or_eyre(eyre!("Group did not match in line"))?;
     let x = &caps[1];
     let y = &caps[2];
@@ -42,8 +45,8 @@ fn encode_line(line: &str, data: &Encoded) -> Result<String> {
 }
 #[allow(clippy::cast_possible_truncation)]
 fn decode_line(line: &str) -> Result<u8> {
-    let caps = regex!(r"^G1 X(\d*\.\d*) Y(\d*\.\d*) E(\d*\.\d*)$")
-        .captures(line)
+    let caps = &REGEX_PATTERN
+        .captures(line.trim())
         .ok_or_eyre(eyre!("Group did not match in line"))?;
     let x = caps[1]
         .chars()
