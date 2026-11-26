@@ -1,21 +1,17 @@
 #![feature(uint_gather_scatter_bits)]
 #![feature(file_buffered)]
 
-use clap::Parser;
-use clap::Subcommand;
-use color_eyre::Section;
-use color_eyre::eyre::{Ok, Result, eyre};
-use lzma_rust2::Lzma2Options;
-use lzma_rust2::Lzma2Writer;
-use regex::Regex;
-use std::fs::File;
-use std::io;
-use std::io::BufRead;
-use std::io::Cursor;
-use std::io::Write;
-use std::sync::LazyLock;
+use clap::{Parser, Subcommand};
+use color_eyre::{
+    Section,
+    eyre::{Ok, Result, eyre},
+};
+use lzma_rust2::{Lzma2Options, Lzma2Reader, Lzma2Writer, LzmaOptions};
+use std::io::{BufRead, Cursor, Write};
+use std::{fs::File, io};
 
 use crate::encoded::REGEX_PATTERN;
+use crate::encoded::decode_line;
 use crate::encoded::encode_line;
 
 mod encoded;
@@ -107,8 +103,52 @@ fn main() -> Result<()> {
         }
         Command::Decode { input, data } => {
             let input_file = File::open_buffered(input)?;
-            let data_file = File::create_buffered(data)?;
-            todo!("Decode")
+            let mut data_file = File::create_buffered(data)?;
+
+            let mut lines = input_file.lines();
+
+            //sig check
+            for line in &mut lines {
+                let line = line?;
+                if REGEX_PATTERN.is_match(&line) {
+                    if decode_line(&line)? == 0xF3 {
+                        break;
+                    }
+                    return Err(eyre!("Invalid signature")
+                        .suggestion("Are you sure that this file contains encoded data?"));
+                }
+            }
+            //Extract legth
+            let mut len_vec: [u8; 4] = [0; 4];
+            let mut len_vec_count: usize = 0;
+            for line in &mut lines {
+                let line = line?;
+                if REGEX_PATTERN.is_match(&line) && len_vec_count < 4 {
+                    len_vec[len_vec_count] = decode_line(&line)?;
+                    len_vec_count += 1;
+                }
+                if len_vec_count >= 4 {
+                    break;
+                }
+            }
+            if len_vec_count != 4 {
+                return Err(eyre!("Data len u32 too short").suggestion("The file may be corrupted"));
+            }
+
+            let mut data_len = u32::from_le_bytes(len_vec);
+            let mut data_vec: Vec<u8> = Vec::with_capacity(data_len as usize);
+            //Decode
+            for line in &mut lines {
+                let line = line?;
+                if REGEX_PATTERN.is_match(&line) && data_len > 0 {
+                    data_vec.push(decode_line(&line)?);
+                    data_len -= 1;
+                }
+            }
+            let mut lzma2_reader =
+                Lzma2Reader::new(data_vec.as_slice(), LzmaOptions::DICT_SIZE_DEFAULT, None);
+            io::copy(&mut lzma2_reader, &mut data_file)?;
+            data_file.flush()?;
         }
         Command::Capacity { input } => {
             let input_file = File::open_buffered(input)?;
