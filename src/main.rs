@@ -61,7 +61,7 @@ fn main() -> Result<()> {
         } => {
             let input_file = File::open_buffered(input)?;
             let mut data_file = File::open_buffered(data)?;
-            let mut output_file = File::create_buffered(output)?;
+            let mut output_file_buf: Cursor<Vec<u8>> = Cursor::new(Vec::new());
 
             println!(
                 "Data size before compression: {}B",
@@ -89,21 +89,22 @@ fn main() -> Result<()> {
                     && let Some(data) = data_iter.next()
                 {
                     let line = encode_line(&line, data)?;
-                    writeln!(output_file, "{line}")?;
+                    writeln!(output_file_buf, "{line}")?;
                     continue;
                 }
-                writeln!(output_file, "{line}")?;
+                writeln!(output_file_buf, "{line}")?;
             }
-            output_file.flush()?;
+            output_file_buf.flush()?;
 
             if data_iter.next().is_some() {
                 return Err(eyre!("Failed to insert all data")
                     .suggestion("Your gcode file may be too short to contain all the data"));
             }
+            let mut output_file = File::create_buffered(output)?;
+            io::copy(&mut output_file_buf, &mut output_file)?;
         }
         Command::Decode { input, data } => {
             let input_file = File::open_buffered(input)?;
-            let mut data_file = File::create_buffered(data)?;
 
             let mut lines = input_file.lines();
 
@@ -147,6 +148,8 @@ fn main() -> Result<()> {
             }
             let mut lzma2_reader =
                 Lzma2Reader::new(data_vec.as_slice(), LzmaOptions::DICT_SIZE_DEFAULT, None);
+
+            let mut data_file = File::create_buffered(data)?;
             io::copy(&mut lzma2_reader, &mut data_file)?;
             data_file.flush()?;
         }
