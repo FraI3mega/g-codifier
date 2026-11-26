@@ -41,6 +41,11 @@ enum Command {
         /// Extracted data
         data: String,
     },
+    ///Get the max (compressed) data size, that can fit in gcode
+    Capacity {
+        /// G-code file to check
+        input: String,
+    }
 }
 
 #[derive(Parser, Debug)]
@@ -107,6 +112,17 @@ fn main() -> Result<()> {
             let input_file = File::open_buffered(input)?;
             let data_file = File::create_buffered(data)?;
             todo!("Decode")
+        }
+        Command::Capacity { input } => {
+            let input_file = File::open_buffered(input)?;
+            let mut count = -5;
+            for line in input_file.lines() {
+                let line = line?;
+                if REGEX_PATTERN.is_match(&line) {
+                    count += 1;
+                }
+            }
+            println!("Max capacity: {count} B");
         }
     }
 
