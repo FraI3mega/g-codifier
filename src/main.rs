@@ -15,12 +15,10 @@ use std::io::Cursor;
 use std::io::Write;
 use std::sync::LazyLock;
 
+use crate::encoded::REGEX_PATTERN;
 use crate::encoded::encode_line;
 
 mod encoded;
-
-static REGEX_PATTERN: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"^G1 X(\d*\.\d*) Y(\d*\.\d*) E(\d*\.\d*)$").unwrap());
 
 #[derive(Debug, Subcommand)]
 enum Command {

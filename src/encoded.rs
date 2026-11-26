@@ -2,7 +2,7 @@ use color_eyre::eyre::{Ok, OptionExt, Result, eyre};
 use regex::Regex;
 use std::sync::LazyLock;
 
-static REGEX_PATTERN: LazyLock<Regex> =
+pub static REGEX_PATTERN: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^G1 X(\d*\.\d*) Y(\d*\.\d*) E(\d*\.\d*)$").unwrap());
 
 #[derive(Debug, PartialEq)]
