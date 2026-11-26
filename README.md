@@ -29,3 +29,6 @@ G1 X136.037|1 Y122.593|1 E.02253|1
 ```
 
 data is encoded as octal digits, storing 8 bits of data and 1 parity bit per row.
+
+Preamble
+`0xF3` followed by u132 byte count = 5 bytes
