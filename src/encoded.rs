@@ -3,7 +3,7 @@ use regex::Regex;
 use std::sync::LazyLock;
 
 pub static REGEX_PATTERN: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"^G1 X(\d*\.\d*) Y(\d*\.\d*) E(\d*\.\d*)$").unwrap());
+    LazyLock::new(|| Regex::new(r"^G1.*X(\d*\.\d*).*Y(\d*\.\d*).*E(-?\d*\.\d*).*$").unwrap());
 
 #[derive(Debug, PartialEq)]
 struct Encoded(u8, u8, u8);
