@@ -45,7 +45,7 @@ enum Command {
     Capacity {
         /// G-code file to check
         input: String,
-    }
+    },
 }
 
 #[derive(Parser, Debug)]
@@ -80,9 +80,10 @@ fn main() -> Result<()> {
 
             let writer = writer.finish()?;
 
+            #[allow(clippy::cast_possible_truncation)]
             let data_len = writer.get_ref().len() as u32;
 
-            println!("Data size after compression: {}B", data_len);
+            println!("Data size after compression: {data_len}B");
             let mut data_vec: Vec<u8> = Vec::with_capacity(data_len as usize + 5);
             data_vec.push(0xF3); // preamble
             data_vec.extend(data_len.to_le_bytes());
@@ -90,25 +91,23 @@ fn main() -> Result<()> {
             let mut data_iter = data_vec.into_iter();
             for line in input_file.lines() {
                 let line = line?;
-                if REGEX_PATTERN.is_match(&line) {
-                    if let Some(data) = data_iter.next() {
-                        let line = encode_line(&line, data)?;
-                        writeln!(output_file, "{line}")?;
-                        continue;
-                    }
+                if REGEX_PATTERN.is_match(&line)
+                    && let Some(data) = data_iter.next()
+                {
+                    let line = encode_line(&line, data)?;
+                    writeln!(output_file, "{line}")?;
+                    continue;
                 }
                 writeln!(output_file, "{line}")?;
             }
             output_file.flush()?;
 
             if data_iter.next().is_some() {
-                return Err(eyre!("Failed to insert all data").suggestion("Your gcode file may be too short to contain all the data"));
+                return Err(eyre!("Failed to insert all data")
+                    .suggestion("Your gcode file may be too short to contain all the data"));
             }
         }
-        Command::Decode {
-            input,
-            data,
-        } => {
+        Command::Decode { input, data } => {
             let input_file = File::open_buffered(input)?;
             let data_file = File::create_buffered(data)?;
             todo!("Decode")

@@ -1,4 +1,4 @@
-use color_eyre::eyre::{Error, Ok, OptionExt, Result, eyre};
+use color_eyre::eyre::{Ok, OptionExt, Result, eyre};
 use regex::Regex;
 use std::sync::LazyLock;
 
@@ -93,7 +93,7 @@ fn test_encode_decode() {
 #[test]
 fn test_decode_bad_parity() {
     let mut enc = Encoded::encode_byte(0xAF).unwrap();
-    enc.0 = enc.0 ^ 0b010;
+    enc.0 ^= 0b010;
     let dec = enc.decode_byte();
     assert!(dec.is_err());
 }
@@ -110,7 +110,7 @@ fn test_encode_line() {
 fn test_encode_line_no_matching_group() {
     let initial_line = "G1 X113.636 Y136.364";
     let line_encoded = encode_line(initial_line, 0xAF);
-    assert!(line_encoded.is_err())
+    assert!(line_encoded.is_err());
 }
 #[test]
 fn test_decode_line() {
@@ -123,20 +123,20 @@ fn test_decode_line() {
 fn test_decode_line_no_matching_group() {
     let initial_line = "G1 X113.636 Y136.364";
     let line_decoded = decode_line(initial_line);
-    assert!(line_decoded.is_err())
+    assert!(line_decoded.is_err());
 }
 
 #[test]
 fn test_decode_line_no_last_char_invalid_digit() {
     let initial_line = "G1 X113.636 Y136.364 E.8958";
     let line_decoded = decode_line(initial_line);
-    assert!(line_decoded.is_err())
+    assert!(line_decoded.is_err());
 }
 
 #[test]
 fn test_encode_decode_line() {
     let line = "G1 X113.636 Y136.364 E.80952";
-    let data = 0xAF as u8;
+    let data = 0xAF_u8;
     let encoded_line = encode_line(line, data).unwrap();
     let decoded_data = decode_line(&encoded_line).unwrap();
     assert_eq!(data, decoded_data);
