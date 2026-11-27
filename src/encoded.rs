@@ -141,3 +141,10 @@ fn test_encode_decode_line() {
     let decoded_data = decode_line(&encoded_line).unwrap();
     assert_eq!(data, decoded_data);
 }
+
+#[test]
+fn test_regex_matching() {
+    let test_cases =vec!["G1 X113.636 Y136.364 E.80952"];
+    let result = test_cases.into_iter().all(|x| REGEX_PATTERN.is_match(x));
+    assert!(result);
+}
