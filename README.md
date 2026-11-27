@@ -1,5 +1,6 @@
 # g-codifier
 
+![](assets/hero.png)
 A little tool for hiding data inside g-code files
 
 ## Try It
