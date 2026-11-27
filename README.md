@@ -49,7 +49,7 @@ Preamble
 - [x] **Medium** — `src/main.rs:64`, `86-102` — encode leaves a corrupt partial output file when data doesn't fit.
 - [ ] **Medium** — `src/main.rs:138-139` — payload allocation uses an unvalidated 4-byte header length.
 - [ ] **Low** — `src/main.rs:138-150` — no check that declared payload bytes were collected; keeps reading lines after `data_len` hits 0.
-- [ ] **Low** — `src/main.rs:155`, `159`, `162` — `Capacity` can print a negative value.
+- [x] **Low** — `src/main.rs:155`, `159`, `162` — `Capacity` can print a negative value.
 - [x] **Low** — `src/main.rs:78`, `81`, `83` — compressed length truncated to `u32` for output ≥ 4 GiB.
 - [ ] **Low** — `src/main.rs:110-120` vs `134-136` — wrong error message when no encoded lines exist.
 - [x] **Low** — `README.md:34` — documents "u132" instead of `u32`.

@@ -162,7 +162,11 @@ fn main() -> Result<()> {
                     count += 1;
                 }
             }
-            println!("Max capacity: {count} B");
+            if count < 1 {
+                println!("File is unsupported or too small to hold data");
+            } else {
+                println!("Max capacity: {count} B");
+            }
         }
     }
 
