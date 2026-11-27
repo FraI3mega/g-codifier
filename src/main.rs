@@ -104,6 +104,9 @@ fn main() -> Result<()> {
                     data_len -= 1;
                 }
             }
+            if data_len > 0 {
+                return Err(eyre!("Read fewer bytes than expected").suggestion("The file may have been corrupted or truncated"));
+            }
             let mut lzma2_reader =
                 Lzma2Reader::new(data_vec.as_slice(), LzmaOptions::DICT_SIZE_DEFAULT, None);
 
