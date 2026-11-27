@@ -1,6 +1,6 @@
 [package]
 name = "g-codifier"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 repository = "https://github.com/FraI3mega/g-codifier"
 description = "A little tool for hiding data inside g-code files"

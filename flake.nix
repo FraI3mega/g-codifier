@@ -73,7 +73,7 @@
               meta = {
                 description = cargoToml.package.description;
                 homepage = "https://github.com/FraI3mega/g-codifier";
-                changelog = "https://github.com/FraI3mega/g-codifier/releases/tag/${version}";
+                changelog = "https://github.com/FraI3mega/g-codifier/releases/tag/v${version}";
                 license = pkgs.lib.licenses.asl20;
                 mainProgram = "g-codifier";
               };
