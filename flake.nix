@@ -26,6 +26,14 @@
           system,
           ...
         }:
+        let
+          cargoToml = builtins.fromTOML (builtins.readFile ./Cargo.toml);
+          toolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
+          rustPlatform = pkgs.makeRustPlatform {
+            cargo = toolchain;
+            rustc = toolchain;
+          };
+        in
         {
           _module.args.pkgs = import inputs.nixpkgs {
             inherit system;
@@ -37,7 +45,7 @@
               with pkgs;
               [
                 config.formatter
-                (rust-bin.fromRustupToolchainFile ./rust-toolchain.toml)
+                toolchain
                 bacon
                 cargo-nextest
                 cargo-dist
@@ -47,6 +55,30 @@
                 clang
               ];
 
+          };
+
+          packages = rec {
+            g-codifier = rustPlatform.buildRustPackage rec {
+              pname = cargoToml.package.name;
+              version = cargoToml.package.name;
+              cargoLock.lockFile = ./Cargo.lock;
+              useNextest = true;
+
+              nativeBuildInputs = pkgs.lib.optionals pkgs.stdenv.hostPlatform.isLinux [
+                pkgs.mold
+                pkgs.clang
+              ];
+
+              src = pkgs.lib.cleanSource ./.;
+              meta = {
+                description = cargoToml.package.description;
+                homepage = "https://github.com/FraI3mega/g-codifier";
+                changelog = "https://github.com/FraI3mega/g-codifier/releases/tag/${version}";
+                license = pkgs.lib.licenses.asl20;
+                mainProgram = "g-codifier";
+              };
+            };
+            default = g-codifier;
           };
 
           formatter = pkgs.nixfmt;
