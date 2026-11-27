@@ -2,6 +2,12 @@
 
 A little tool for hiding data in G-code
 
+## Limitations
+
+- The max size of the compressed data is about 4GiB, although I'll be in awe if you manage that
+- Only supports ASCII g-code
+- Tested on g-code output from OrcaSlicer
+
 ## How It Works
 
 A G-code file is made up many lines, each containing one command for the machine.
@@ -44,6 +50,6 @@ Preamble
 - [ ] **Medium** — `src/main.rs:138-139` — payload allocation uses an unvalidated 4-byte header length.
 - [ ] **Low** — `src/main.rs:138-150` — no check that declared payload bytes were collected; keeps reading lines after `data_len` hits 0.
 - [ ] **Low** — `src/main.rs:155`, `159`, `162` — `Capacity` can print a negative value.
-- [ ] **Low** — `src/main.rs:78`, `81`, `83` — compressed length truncated to `u32` for output ≥ 4 GiB.
+- [x] **Low** — `src/main.rs:78`, `81`, `83` — compressed length truncated to `u32` for output ≥ 4 GiB.
 - [ ] **Low** — `src/main.rs:110-120` vs `134-136` — wrong error message when no encoded lines exist.
 - [x] **Low** — `README.md:34` — documents "u132" instead of `u32`.
