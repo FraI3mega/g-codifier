@@ -99,9 +99,12 @@ fn main() -> Result<()> {
             //Decode
             for line in &mut lines {
                 let line = line?;
-                if REGEX_PATTERN.is_match(&line) && data_len > 0 {
+                if REGEX_PATTERN.is_match(&line) {
                     data_vec.push(decode_line(&line)?);
                     data_len -= 1;
+                }
+                if data_len == 0 {
+                    break;
                 }
             }
             if data_len > 0 {
@@ -182,4 +185,3 @@ fn encode(input: String, data: String, output: String) -> Result<()> {
     output_file.flush()?;
     Ok(())
 }
-
