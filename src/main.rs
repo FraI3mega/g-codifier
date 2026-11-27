@@ -33,9 +33,10 @@ enum Command {
         /// Input g-code file with hidden data
         input: String,
         /// Extracted data
+        #[arg(default_value_t = "decoded_data".to_string())]
         data: String,
     },
-    ///Get the max (compressed) data size, that can fit in gcode
+    ///Get the max (compressed) data size, that can fit in the g-code file
     Capacity {
         /// G-code file to check
         input: String,
