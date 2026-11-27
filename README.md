@@ -23,6 +23,7 @@ A little tool for hiding data inside g-code files
 <!--toc:end-->
 ## Try It
 
+You can find an example file in the [releases usage](https://github.com/FraI3mega/g-codifier/releases/tag/demo) 
 ### 1. Download the Executable from Releases
 
 Download the current executable for your OS from [GitHub Releases](https://github.com/FraI3mega/g-codifier/releases) and run it in the terminal. 
