@@ -1,8 +1,26 @@
 # g-codifier
 
+
 ![](assets/hero.png)
 A little tool for hiding data inside g-code files
 
+## Table of Content
+
+<!--toc:start-->
+- [g-codifier](#g-codifier)
+  - [Try It](#try-it)
+    - [1. Download the Executable from Releases](#1-download-the-executable-from-releases)
+    - [2. Use Nix](#2-use-nix)
+    - [3. Clone the Repo and Build Locally](#3-clone-the-repo-and-build-locally)
+  - [Usage](#usage)
+    - [Encode](#encode)
+    - [Decode](#decode)
+    - [Capacity](#capacity)
+  - [Limitations](#limitations)
+  - [How It Works](#how-it-works)
+  - [What I Learned](#what-i-learned)
+  - [AI Disclosure](#ai-disclosure)
+<!--toc:end-->
 ## Try It
 
 ### 1. Download the Executable from Releases
@@ -93,6 +111,13 @@ Before writing the data, it is compressed to hopefully store more of it in the f
 Since the added digits don't really change the positions too much, it's almost indistiguishable from the original file.
 
 The first 5 changed lines contain the signature - `0xF3`, and the length of the contained data, as a 32 bit unsigned integer.
+
+## What I Learned 
+
+This project made me remember why I love Rust so much.
+And the saying about regex definitely holds, it caused some problems, but it wasn't that hard to fix them.
+I want to improve the readability of the code, probably refactor the main function. 
+I'm also looking into making it a web app, som more people can try it out.
 
 ## AI Disclosure
 
