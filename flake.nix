@@ -37,17 +37,10 @@
               with pkgs;
               [
                 config.formatter
-                (rust-bin.selectLatestNightlyWith (
-                  toolchain:
-                  toolchain.default.override {
-                    extensions = [
-                      "rust-analyzer"
-                      "rust-src"
-                    ];
-                  }
-                ))
+                (rust-bin.fromRustupToolchainFile ./rust-toolchain.toml)
                 bacon
                 cargo-nextest
+                cargo-dist
               ]
               ++ pkgs.lib.optionals pkgs.stdenv.hostPlatform.isLinux [
                 mold
