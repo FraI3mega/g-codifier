@@ -105,7 +105,8 @@ fn main() -> Result<()> {
                 }
             }
             if data_len > 0 {
-                return Err(eyre!("Read fewer bytes than expected").suggestion("The file may have been corrupted or truncated"));
+                return Err(eyre!("Read fewer bytes than expected")
+                    .suggestion("The file may have been corrupted or truncated"));
             }
             let mut lzma2_reader =
                 Lzma2Reader::new(data_vec.as_slice(), LzmaOptions::DICT_SIZE_DEFAULT, None);
@@ -134,50 +135,52 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn encode(input: String,data: String ,output: String) -> Result<()> {
+fn encode(input: String, data: String, output: String) -> Result<()> {
+    let input_file = File::open_buffered(input)?;
+    let mut data_file = File::open_buffered(data)?;
+    let mut output_file_buf: Cursor<Vec<u8>> = Cursor::new(Vec::new());
 
-            let input_file = File::open_buffered(input)?;
-            let mut data_file = File::open_buffered(data)?;
-            let mut output_file_buf: Cursor<Vec<u8>> = Cursor::new(Vec::new());
+    println!(
+        "Data size before compression: {}B",
+        data_file.get_ref().metadata()?.len()
+    );
 
-            println!(
-                "Data size before compression: {}B",
-                data_file.get_ref().metadata()?.len()
-            );
+    let data_buffer: Cursor<Vec<u8>> = Cursor::new(Vec::new());
+    let mut writer = Lzma2Writer::new(data_buffer, Lzma2Options::default());
+    io::copy(&mut data_file, &mut writer)?;
 
-            let data_buffer: Cursor<Vec<u8>> = Cursor::new(Vec::new());
-            let mut writer = Lzma2Writer::new(data_buffer, Lzma2Options::default());
-            io::copy(&mut data_file, &mut writer)?;
+    let writer = writer.finish()?;
 
-            let writer = writer.finish()?;
+    #[allow(clippy::cast_possible_truncation)]
+    let data_len = writer.get_ref().len() as u32;
 
-            #[allow(clippy::cast_possible_truncation)]
-            let data_len = writer.get_ref().len() as u32;
+    println!("Data size after compression: {data_len}B");
+    let mut data_vec: Vec<u8> = Vec::with_capacity(data_len as usize + 5);
+    data_vec.push(0xF3); // preamble
+    data_vec.extend(data_len.to_le_bytes());
+    data_vec.extend(writer.into_inner());
+    let mut data_iter = data_vec.into_iter();
+    for line in input_file.lines() {
+        let line = line?;
+        dbg!(&line);
+        if REGEX_PATTERN.is_match(&line)
+            && let Some(data) = data_iter.next()
+        {
+            let line = encode_line(&line, data)?;
+            writeln!(output_file_buf, "{line}")?;
+            continue;
+        }
+        writeln!(output_file_buf, "{line}")?;
+    }
 
-            println!("Data size after compression: {data_len}B");
-            let mut data_vec: Vec<u8> = Vec::with_capacity(data_len as usize + 5);
-            data_vec.push(0xF3); // preamble
-            data_vec.extend(data_len.to_le_bytes());
-            data_vec.extend(writer.into_inner());
-            let mut data_iter = data_vec.into_iter();
-            for line in input_file.lines() {
-                let line = line?;
-                if REGEX_PATTERN.is_match(&line)
-                    && let Some(data) = data_iter.next()
-                {
-                    let line = encode_line(&line, data)?;
-                    writeln!(output_file_buf, "{line}")?;
-                    continue;
-                }
-                writeln!(output_file_buf, "{line}")?;
-            }
-            output_file_buf.flush()?;
+    if data_iter.next().is_some() {
+        return Err(eyre!("Failed to insert all data")
+            .suggestion("Your gcode file may be too short to contain all the data"));
+    }
 
-            if data_iter.next().is_some() {
-                return Err(eyre!("Failed to insert all data")
-                    .suggestion("Your gcode file may be too short to contain all the data"));
-            }
-            let mut output_file = File::create_buffered(output)?;
-            io::copy(&mut output_file_buf, &mut output_file)?;
-            Ok(())
+    let mut output_file = File::create_buffered(output)?;
+    output_file_buf.set_position(0);
+    io::copy(&mut output_file_buf, &mut output_file)?;
+    output_file.flush()?;
+    Ok(())
 }
