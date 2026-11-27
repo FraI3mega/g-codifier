@@ -28,9 +28,9 @@ The tool has 3 commands: `encode`, `decode` and `capacity`.
 g-codify encode <input-file> <data-to-encode> [output-file]
 ```
 
-input-file - filename of the g-code file inside of which the data will be hidden
-data-to-encode - filename of the file with the data to hide
-output-file - defaults to `out.gcode`, sets the processed filename
+- `input-file` - filename of the g-code file inside of which the data will be hidden
+- `data-to-encode` - filename of the file with the data to hide
+- `output-file` - defaults to `out.gcode`, sets the processed filename
 
 ### Decode
 
@@ -38,9 +38,9 @@ output-file - defaults to `out.gcode`, sets the processed filename
 g-codify decode <input-file> [decoded-data]
 ```
 
-input-file - filename of the g-code file inside of which the data is hidden
-decoded-data - defaults to `decoded-data`, sets the filename of the extracted file
-
+- `input-file` - filename of the g-code file inside of which the data is hidden
+- `decoded-data` - defaults to `decoded-data`, sets the filename of the extracted file
+ 
 Extracts the hidden data from the g-code file
 
 ### Capacity
@@ -49,7 +49,7 @@ Extracts the hidden data from the g-code file
 g-codify capacity <input-file>
 ```
 
-input-file - filename of the input g-code file
+- `input-file` - filename of the input g-code file
 
 This command counts the maximum capacity for the data **after** compression.
 This means you may be able to store a larger file than this if it compresses well
