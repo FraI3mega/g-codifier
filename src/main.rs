@@ -151,8 +151,7 @@ fn encode(input: String, data: String, output: String) -> Result<()> {
 
     let writer = writer.finish()?;
 
-    #[allow(clippy::cast_possible_truncation)]
-    let data_len = writer.get_ref().len() as u32;
+    let data_len = u32::try_from(writer.get_ref().len())?;
 
     println!("Data size after compression: {data_len}B");
     let mut data_vec: Vec<u8> = Vec::with_capacity(data_len as usize + 5);
@@ -162,7 +161,6 @@ fn encode(input: String, data: String, output: String) -> Result<()> {
     let mut data_iter = data_vec.into_iter();
     for line in input_file.lines() {
         let line = line?;
-        dbg!(&line);
         if REGEX_PATTERN.is_match(&line)
             && let Some(data) = data_iter.next()
         {
@@ -184,3 +182,4 @@ fn encode(input: String, data: String, output: String) -> Result<()> {
     output_file.flush()?;
     Ok(())
 }
+
