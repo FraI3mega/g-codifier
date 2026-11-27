@@ -1,6 +1,58 @@
 # g-codifier
 
-A little tool for hiding data in G-code
+A little tool for hiding data inside g-code files
+
+## Try It
+
+### 1. Download the Executable from Releases
+
+Download the current executable for your OS from [GitHub Releases](https://github.com/FraI3mega/g-codifier/releases) and run it in the terminal. 
+
+### 2. Use Nix
+
+```bash
+nix run github:FraI3mega/g-codifier -- --help
+```
+
+### 3. Clone the Repo and Build Locally
+
+Clone the repo locally and run `cargo run`. You need the nightly toolchain for it.
+
+## Usage
+
+The tool has 3 commands: `encode`, `decode` and `capacity`.
+
+### Encode
+
+```bash
+g-codify encode <input-file> <data-to-encode> [output-file]
+```
+
+input-file - filename of the g-code file inside of which the data will be hidden
+data-to-encode - filename of the file with the data to hide
+output-file - defaults to `out.gcode`, sets the processed filename
+
+### Decode
+
+```bash
+g-codify decode <input-file> [decoded-data]
+```
+
+input-file - filename of the g-code file inside of which the data is hidden
+decoded-data - defaults to `decoded-data`, sets the filename of the extracted file
+
+Extracts the hidden data from the g-code file
+
+### Capacity
+
+```bash
+g-codify capacity <input-file>
+```
+
+input-file - filename of the input g-code file
+
+This command counts the maximum capacity for the data **after** compression.
+This means you may be able to store a larger file than this if it compresses well
 
 ## Limitations
 
@@ -13,42 +65,35 @@ A little tool for hiding data in G-code
 A G-code file is made up many lines, each containing one command for the machine.
 
 ```gcode
-G1 X129.283 Y113.963 E.02253
-G1 X136.037 Y120.717 E.34412
-G1 X136.037 Y121.342 E.02253
-G1 X128.658 Y113.963 E.37598
-G1 X128.032 Y113.963 E.02253
-G1 X136.037 Y121.968 E.40784
-G1 X136.037 Y122.593 E.02253
+G1 X132.731 Y114.611 E.02306
+G1 X136.406 Y118.287 E.18947
+G1 X135.774 Y118.287 E.02306
+G1 X132.731 Y115.244 E.15685
+G1 X132.731 Y115.877 E.02306
+G1 X135.141 Y118.287 E.12423
+G1 X134.508 Y118.287 E.02306
 ```
 
-By adding or modifying the least significant digit of the cordinates we can hide data in them.
+By adding an octal digit at the end of each coordinate, we can store some data in it.
 
 ```gcode
-G1 X129.283|1 Y113.963|1 E.02253|1
-G1 X136.037|1 Y120.717|1 E.34412|1
-G1 X136.037|1 Y121.342|1 E.02253|1
-G1 X128.658|1 Y113.963|1 E.37598|1
-G1 X128.032|1 Y113.963|1 E.02253|1
-G1 X136.037|1 Y121.968|1 E.40784|1
-G1 X136.037|1 Y122.593|1 E.02253|1
+G1 X132.7313 Y114.6110 E.023063
+G1 X136.4063 Y118.2871 E.189474
+G1 X135.7742 Y118.2873 E.023062
+G1 X132.7312 Y115.2440 E.156852
+G1 X132.7311 Y115.8774 E.023063
+G1 X135.1412 Y118.2870 E.124232
+G1 X134.5080 Y118.2870 E.023060
 ```
 
-data is encoded as octal digits, storing 8 bits of data and 1 parity bit per row.
+Each row contains 3 digits equating to 9 bits, 8 of which are the data and the last one parity.
+Before writing the data, it is compressed to hopefully store more of it in the file.
 
-Preamble
-`0xF3` followed by u32 byte count = 5 bytes
+Since the added digits don't really change the positions too much, it's almost indistiguishable from the original file.
 
+The first 5 changed lines contain the signature - `0xF3`, and the length of the contained data, as a 32 bit unsigned integer.
 
-## Review TODO
+## AI Disclosure
 
-- [x] **high** — `src/encoded.rs:40-42` — `encode_line` drops all content outside X/Y/E (feedrate, extra fields, comments).
-- [x] **High** — `src/main.rs:62-64`, `86` — encode truncates the input when `input` == `output`; same pattern in decode (`105-106`).
-- [ ] **Medium** — `src/encoded.rs:6` — regex greedily captures X/Y/E from trailing comments instead of the command.
-- [x] **Medium** — `src/main.rs:106` — decode creates/truncates the output data file before validating input.
-- [x] **Medium** — `src/main.rs:64`, `86-102` — encode leaves a corrupt partial output file when data doesn't fit.
-- [x] **Low** — `src/main.rs:138-150` — no check that declared payload bytes were collected; keeps reading lines after `data_len` hits 0.
-- [x] **Low** — `src/main.rs:155`, `159`, `162` — `Capacity` can print a negative value.
-- [x] **Low** — `src/main.rs:78`, `81`, `83` — compressed length truncated to `u32` for output ≥ 4 GiB.
-- [ ] **Low** — `src/main.rs:110-120` vs `134-136` — wrong error message when no encoded lines exist.
-- [x] **Low** — `README.md:34` — documents "u132" instead of `u32`.
+AI has only been used to help with reviewing the code.
+It wasn't used for generating any of the code.
